@@ -2,24 +2,22 @@
 
 EyeRest is a small, native macOS menu-bar app that reminds you to rest your eyes using the
 **20-20-20 rule**: every 20 minutes, look at something 20 feet (6 m) away for 20 seconds. When a
-break is due, it gently dims every display and shows a countdown.
+reminder is due, a Frutiger Aero glass card floats in at the top right of the screen, counts down
+and closes itself. It never blocks anything: keep working, or look away.
 
 ## Features
 
-- **Full-screen breaks** on every display, with a countdown ring and a short tip for relaxing
-  your eyes and body.
-- **Heads-up 10 seconds before a break**, with *Start Now* and *Snooze* buttons. It never takes
-  keyboard focus, so you can finish your sentence.
-- **Snooze or skip** a break, or turn either off. With skipping off, you can still skip in an
-  emergency by holding Esc for 2 seconds.
-- **Pauses automatically when you're away**: idle, screen locked, Mac asleep, displays asleep, or
-  switched to another user. Time away counts as a break.
-- **Holds breaks during calls** while your camera or microphone is in use.
-- **Menu-bar countdown** (`18m`, then `42s` in the final minute), and today's break count.
-- Pause for 30 minutes, 1 hour, 2 hours or until you resume. Take a break early, or reset the timer.
-- Optional chime when a break ends, and optional launch at login.
+- **Gentle, non-blocking reminder** every *N* minutes: a small card under the menu bar, like a
+  notification, with a countdown orb and a **Done** button. It never takes focus, so your typing
+  carries on.
+- Appears on every Space and over full-screen apps, on the screen with the pointer.
+- An optional soft sound when the card appears.
+- **Menu-bar countdown** (`18m`, then `42s` in the final minute).
+- Pause for 30 minutes, 1 hour, 2 hours or until you resume. Get a reminder right away, or reset the timer.
+- Starts over after sleep, screen lock or a switch to another user.
+- Optional launch at login.
 - Works with VoiceOver, Reduce Motion, Reduce Transparency and Increase Contrast.
-- Menu-bar only: no Dock icon, no notifications, no permission prompts.
+- Menu-bar only: no Dock icon, no permission prompts, nothing tracked.
 
 ## Requirements
 
@@ -33,8 +31,8 @@ make install
 ```
 
 This builds a release binary, assembles and ad-hoc signs `build/EyeRest.app`, installs it to
-`~/Applications`, and opens it. On first launch, EyeRest opens its Settings window with a short
-welcome. After that it lives in the menu bar as an eye icon.
+`~/Applications`, and opens it. EyeRest lives in the menu bar as an eye icon; the first reminder
+arrives 20 minutes later.
 
 To install for all users in `/Applications` instead, run `scripts/build-app.sh --install --system --open`
 from an administrator account.
@@ -55,85 +53,81 @@ for example `EYEREST_VERSION=1.1.0 make app`.
 
 Click the eye icon in the menu bar:
 
-- **Status**: time to the next break, or why EyeRest is paused.
-- **Take a Break Now** (⌘B).
-- **Pause** ▸ For 30 Minutes / For 1 Hour / For 2 Hours / Until I Resume. While paused, this becomes **Resume**.
-- **Reset Timer**: start a fresh work interval.
-- **Today's count** of breaks taken and skipped.
+- **Status**: "Next reminder in 18:42", "Resting — 0:12 left" while the card is up,
+  "Paused until 3:45 PM" or "Paused".
+- **Remind Me Now** (⌘R): show the card now (this also ends a pause). Hidden while the card is up.
+- **Pause** ▸ For 30 Minutes / For 1 Hour / For 2 Hours / Until I Resume. Pausing closes the card if
+  it is up. While paused, this item becomes **Resume**, which starts a fresh interval.
+- **Reset Timer**: restart the countdown to the next reminder.
 - **Settings…** (⌘,), **About EyeRest**, **Quit EyeRest** (⌘Q).
 
-The icon shows the state: an eye while working, a filled eye on a break, a pause symbol when
-paused, and a sleeping moon while you're away.
+The shortcuts work while the menu is open; EyeRest registers no global hotkeys. The icon shows the
+state: an eye while counting down, a filled eye while the card is up, and a pause symbol when paused.
 
-**Heads-up.** Ten seconds before a break, a small pill appears at the top of the screen with the
-pointer: "Eye break in 10 seconds". Click **Start Now** to begin the break right away, or
-**Snooze** to postpone it.
-
-**During a break.** Every display dims. Look at something far away until the ring completes.
-The break ends by itself; you don't need to click anything. It doesn't steal focus from the app
-you were using, so you can carry on typing once the break is over.
-
-| Key or button         | Effect                                                                        |
-| --------------------- | ----------------------------------------------------------------------------- |
-| **Snooze N min**      | Postpone the break (unless *Snooze* is off)                                   |
-| **Skip Break** or Esc | End the break now (if skipping is allowed)                                    |
-| Hold Esc for 2 s      | Emergency skip when skipping is turned off                                    |
-| Any other key         | Ignored, as is every key in the first second, so typing can't dismiss a break |
+**The reminder card.** It reads "Time to rest your eyes" and "Look at something 20 feet (6 m) away.",
+with the time left (`0:17`) in a glossy ring. When the countdown ends, the card fades out by itself;
+click **Done** to close it early. Either way, the next interval starts when the card closes. The card
+never becomes the active window and never activates EyeRest, so the app you're using keeps the
+keyboard, and the rest of the screen stays fully usable. A single click on **Done** works even while
+another app is active. EyeRest doesn't watch your input, so if you're away the card simply closes on
+schedule. VoiceOver announces the card once when it appears, and with Reduce Motion it appears and
+disappears without animation.
 
 **Menu-bar icon hidden?** On a crowded menu bar or behind the notch, open EyeRest again (for
 example from Spotlight) to bring up Settings.
 
 ## Settings
 
-Changes apply immediately. **Restore Defaults** resets everything except *Open at login*.
+Changes apply immediately; a new interval restarts the countdown, and a new reminder length applies
+from the next card. **Restore Defaults** resets everything except *Open at login*.
 
-| Setting                           | Default     | Options                                              |
-| --------------------------------- | ----------- | ---------------------------------------------------- |
-| Remind me every                   | 20 min      | 1–120 min                                            |
-| Break length                      | 20 sec      | 10, 20, 30, 45 sec · 1, 2, 3, 5 min                  |
-| Warn me 10 seconds before a break | On          |                                                      |
-| Play a sound when a break ends    | On          |                                                      |
-| Allow skipping breaks             | On          |                                                      |
-| Snooze                            | 5 min       | Off · 1, 2, 5, 10, 15, 30 min                        |
-| Hold breaks during calls          | On          |                                                      |
-| Pause when I'm away               | After 5 min | Never · after 2, 3, 5, 10, 15, 30 min                |
-| Open at login                     | Off         | Needs the app in `/Applications` or `~/Applications` |
-| Show time remaining in menu bar   | On          |                                                      |
+| Setting                         | Default | Options                                              |
+| ------------------------------- | ------- | ---------------------------------------------------- |
+| Remind me every                 | 20 min  | 1–120 min                                            |
+| Look away for                   | 20 sec  | 10, 20, 30, 45 or 60 sec                             |
+| Play a sound                    | On      | A soft system sound when the card appears            |
+| Show time remaining in menu bar | On      | `18m`, then `42s` in the final minute                |
+| Open at login                   | Off     | Needs the app in `/Applications` or `~/Applications` |
 
-## Away detection and call hold
+## Sleep, lock and time away
 
-EyeRest treats you as **away** when any of these is true:
+While the Mac is asleep, the screen is locked, the displays are asleep or another user is switched
+in, the timer stops and a visible card closes. Once all of that is over, a fresh interval starts, so a
+reminder never greets you the moment you unlock. If EyeRest misses more than a minute without being
+told why (a sleep it didn't hear about, say), it also starts a fresh interval. Setting the clock back
+keeps the time remaining, and a pause stays in place through sleep and lock.
 
-- There has been no keyboard, mouse or trackpad input for the *Pause when I'm away* time (unless
-  it is set to *Never*).
-- The screen is locked, the Mac is asleep, the displays are asleep, or another user is active.
-  These apply even with *Pause when I'm away* set to *Never*.
-
-While you're away the timer is frozen. When you come back:
-
-- If you were away for at least one break length, that counts as your break and a fresh interval
-  starts.
-- Otherwise the timer picks up where it stopped, with at least 15 seconds left.
-
-Locking the screen or sleeping during a break counts the break as completed. Being idle never
-interrupts a break. While an app keeps the display awake, as video players and call apps do, you
-count as present even without touching anything, and idle time only starts counting once the app
-lets go. So watching a video neither pauses your breaks nor counts as one.
-
-**Call hold.** In the last 35 seconds before a break, EyeRest checks whether any app is using the
-camera or microphone. If so, the break waits: the status reads "Break on hold while you're on a
-call", and the countdown and heads-up are hidden. About 30 seconds after the call ends, the break
-arrives as usual, with its heads-up. Headphones that are only playing audio don't count as a call.
+That is all EyeRest observes. It doesn't track keyboard, mouse or idle time, doesn't check the camera
+or microphone, and keeps no stats or history.
 
 ## Privacy
 
 - No network access, accounts, analytics or telemetry.
 - No permission prompts: EyeRest doesn't need Accessibility, Screen Recording, Camera, Microphone
   or Notifications access.
-- Idle detection reads only the time since your last input, never which keys you pressed.
-- Call detection reads only whether the camera or microphone is *in use*. EyeRest never captures
-  audio or video.
-- Settings and today's break counts are stored locally in the app's preferences.
+- Nothing is tracked. EyeRest only listens for the system's sleep, lock, display-sleep and
+  user-switch notifications.
+- Your settings are the only thing it stores, locally in the app's preferences.
+
+## Design
+
+The card and the app icon follow **Frutiger Aero**, the glossy mid-2000s look of sky-blue gradients,
+glass, bubbles and fresh green: a frosted glass pane, a glass countdown orb with rising bubbles and
+an aqua gel **Done** button. The icon is an eye over a sunlit meadow under a clear sky. In Dark Mode
+the glass is tinted down a step. The look has a few deliberate limits:
+
+- **The menu-bar icon stays monochrome.** macOS expects menu-bar icons to be template images, so it
+  is a plain SF Symbol that adapts to light and dark menu bars. The colour lives in the card and the
+  app icon.
+- **Avenir Next instead of Frutiger.** Frutiger doesn't ship with macOS and isn't bundled, so the card
+  uses Avenir Next, also by Adrian Frutiger, which does.
+- **Everything is drawn in code.** The card is SwiftUI gradients and highlights, and
+  `scripts/make-icon.swift` draws the app icon with Core Graphics at build time; the repository holds
+  no image files. The glass is painted rather than a live blur of what's behind it, so it is nearly
+  opaque and stays readable over busy windows. Reduce Transparency makes it fully opaque, and Increase Contrast
+  strengthens its text and borders.
+- **No system Liquid Glass.** That material needs the macOS 26 SDK; EyeRest draws its own glass and
+  looks the same on every macOS version from 14 up.
 
 ## Uninstall
 
@@ -147,12 +141,12 @@ arrives as usual, with its heads-up. Headphones that are only playing audio don'
 ```
 Package.swift             SwiftPM package (no Xcode project)
 Sources/
-  EyeRestCore/            Break scheduler state machine, settings, daily stats, status text.
+  EyeRestCore/            Reminder scheduler state machine, settings, status text and time formatting.
                           Foundation only, so it is unit-tested headlessly.
-  EyeRestSystem/          OS signals: idle time, lock/sleep/display/session changes,
-                          camera and microphone in use, the end-of-break chime.
-  EyeRestUI/              Break overlay, heads-up and settings window (AppKit + SwiftUI).
-  EyeRest/                The menu-bar app that wires everything together.
+  EyeRestUI/              The reminder card, its Frutiger Aero style and the Settings window
+                          (AppKit + SwiftUI).
+  EyeRest/                The menu-bar app: status item and menu, sleep/lock observers, and the
+                          wiring between them.
 Tests/EyeRestCoreTests/   Swift Testing suite for EyeRestCore.
 Resources/Info.plist      Bundle metadata (menu-bar-only app, com.balraj.EyeRest).
 scripts/build-app.sh      Builds, assembles, signs and optionally installs and opens EyeRest.app.
@@ -167,8 +161,9 @@ make test        # or: swift test
 ```
 
 The tests use [Swift Testing](https://github.com/swiftlang/swift-testing), which works with the
-Command Line Tools alone. They cover the core logic: the break scheduler (including a randomized
-test of its invariants), settings, daily stats and the formatted text.
+Command Line Tools alone. They cover the core logic: the reminder scheduler (including a randomized
+test of its invariants), settings decoding and storage, and the formatted text. Tests that need
+`UserDefaults` use a throwaway store in a temporary folder, never your real preferences.
 
 For quick iteration you can also run the app unbundled with `swift run EyeRest`. In that mode
 *Open at login* and the single-instance check are unavailable. `make run` tests the real bundle

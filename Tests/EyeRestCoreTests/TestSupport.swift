@@ -7,34 +7,32 @@ let t0 = Date(timeIntervalSinceReferenceDate: 800_000_000)
 /// The instant `seconds` after `t0`.
 func at(_ seconds: TimeInterval) -> Date { t0 + seconds }
 
-/// 20 min work, 20 s break, 5 min snooze, 5 min idle threshold.
+/// 20 min interval, 20 s reminder.
 let defaultSettings = EyeRestSettings.default
 
 /// Ticks at 1 Hz from `from` through `to` (inclusive), returning every event.
-func run(
-    _ scheduler: inout BreakScheduler, from: TimeInterval, through to: TimeInterval, holdBreak: Bool = false
-) -> [SchedulerEvent] {
-    var events: [SchedulerEvent] = []
+func run(_ scheduler: inout ReminderScheduler, from: TimeInterval, through to: TimeInterval) -> [ReminderEvent] {
+    var events: [ReminderEvent] = []
     var t = from
     while t <= to {
-        events += scheduler.tick(now: at(t), holdBreak: holdBreak)
+        events += scheduler.tick(now: at(t))
         t += 1
     }
     return events
 }
 
 /// Ticks at 1 Hz from `lastSeen + 1` up to, but excluding, `to`, so the scheduler never sees a gap.
-func advance(_ scheduler: inout BreakScheduler, to: TimeInterval, holdBreak: Bool = false) -> [SchedulerEvent] {
+func advance(_ scheduler: inout ReminderScheduler, to: TimeInterval) -> [ReminderEvent] {
     let next = scheduler.lastSeen.timeIntervalSince(t0) + 1
     guard next < to else { return [] }
-    return run(&scheduler, from: next, through: to - 1, holdBreak: holdBreak)
+    return run(&scheduler, from: next, through: to - 1)
 }
 
-/// A scheduler whose first break has just started at the end of the first work interval
-/// (at 1200 with default settings, ending at 1220).
-func schedulerOnFirstBreak(settings: EyeRestSettings = defaultSettings) -> BreakScheduler {
-    var scheduler = BreakScheduler(settings: settings, now: t0)
-    let due = scheduler.settings.workInterval
+/// A scheduler whose first reminder has just appeared at the end of the first interval
+/// (at 1200 with default settings, closing itself at 1220).
+func schedulerReminding(settings: EyeRestSettings = defaultSettings) -> ReminderScheduler {
+    var scheduler = ReminderScheduler(settings: settings, now: t0)
+    let due = scheduler.settings.interval
     _ = advance(&scheduler, to: due)
     _ = scheduler.tick(now: at(due))
     return scheduler

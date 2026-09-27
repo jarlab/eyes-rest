@@ -7,7 +7,7 @@ import AppKit
 @MainActor
 final class StatusItemController: NSObject, NSMenuDelegate {
     struct Actions {
-        var takeBreakNow: @MainActor () -> Void
+        var remindNow: @MainActor () -> Void
         /// Pauses for the given number of seconds, or until resumed when nil.
         var pause: @MainActor (TimeInterval?) -> Void
         var resume: @MainActor () -> Void
@@ -19,24 +19,22 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     /// Everything the icon and menu show.
     struct Display: Equatable {
         enum Phase: Equatable {
-            case working, onBreak, paused, away
+            case counting, reminding, paused, suspended
         }
 
         var phase: Phase
         /// The countdown next to the icon, or nil for the icon alone.
         var countdown: String?
         var statusLine: String
-        var statsLine: String
     }
 
     /// References to the items that change while the menu exists.
     private struct MenuItems {
         let status: NSMenuItem
-        let takeBreak: NSMenuItem
+        let remindNow: NSMenuItem
         let pause: NSMenuItem
         let resume: NSMenuItem
         let resetTimer: NSMenuItem
-        let stats: NSMenuItem
     }
 
     /// The timed entries of the Pause submenu, in minutes.
@@ -76,12 +74,6 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         self.display = display
         updateButton()
         if isMenuOpen { updateMenuItems() }
-    }
-
-    /// Closes the menu if it is open, so it stops tracking events before the break overlay appears.
-    func cancelMenuTracking() {
-        guard isMenuOpen else { return }
-        menu.cancelTracking()
     }
 
     // MARK: - NSMenuDelegate
@@ -128,11 +120,12 @@ final class StatusItemController: NSObject, NSMenuDelegate {
     // MARK: - Menu
 
     private func buildMenu() -> MenuItems {
-        let status = infoItem()
+        let status = NSMenuItem(title: "", action: nil, keyEquivalent: "")
+        status.isEnabled = false
         menu.addItem(status)
 
-        let takeBreak = actionItem("Take a Break Now", action: #selector(takeBreakNow), key: "b")
-        menu.addItem(takeBreak)
+        let remindNow = actionItem("Remind Me Now", action: #selector(remindNow), key: "r")
+        menu.addItem(remindNow)
 
         let pauseMenu = NSMenu()
         pauseMenu.autoenablesItems = false
@@ -154,19 +147,13 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         menu.addItem(resetTimer)
 
         menu.addItem(.separator())
-        let stats = infoItem()
-        menu.addItem(stats)
-
-        menu.addItem(.separator())
         menu.addItem(actionItem("Settings…", action: #selector(showSettings), key: ","))
         menu.addItem(actionItem("About EyeRest", action: #selector(showAbout)))
         let quit = NSMenuItem(title: "Quit EyeRest", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         quit.target = NSApp
         menu.addItem(quit)
 
-        return MenuItems(
-            status: status, takeBreak: takeBreak, pause: pause, resume: resume, resetTimer: resetTimer, stats: stats
-        )
+        return MenuItems(status: status, remindNow: remindNow, pause: pause, resume: resume, resetTimer: resetTimer)
     }
 
     /// Brings the existing items in line with `display`, touching only properties whose value changes.
@@ -174,18 +161,10 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         guard let items = menuItems else { return }
         let phase = display.phase
         items.status.setTitle(display.statusLine)
-        items.takeBreak.setHidden(phase == .onBreak)
+        items.remindNow.setHidden(phase == .reminding)
         items.pause.setHidden(phase == .paused)
         items.resume.setHidden(phase != .paused)
-        items.resetTimer.setEnabled(phase == .working)
-        items.stats.setTitle(display.statsLine)
-    }
-
-    /// A disabled item that only displays text.
-    private func infoItem() -> NSMenuItem {
-        let item = NSMenuItem(title: "", action: nil, keyEquivalent: "")
-        item.isEnabled = false
-        return item
+        items.resetTimer.setEnabled(phase == .counting)
     }
 
     private func actionItem(_ title: String, action: Selector, key: String = "") -> NSMenuItem {
@@ -194,7 +173,7 @@ final class StatusItemController: NSObject, NSMenuDelegate {
         return item
     }
 
-    @objc private func takeBreakNow() { actions.takeBreakNow() }
+    @objc private func remindNow() { actions.remindNow() }
     @objc private func pauseForMinutes(_ sender: NSMenuItem) { actions.pause(TimeInterval(sender.tag) * 60) }
     @objc private func pauseUntilResumed() { actions.pause(nil) }
     @objc private func resume() { actions.resume() }
@@ -207,10 +186,9 @@ private extension StatusItemController.Display.Phase {
     /// Template SF Symbols for the menu-bar icon.
     var symbolName: String {
         switch self {
-        case .working: "eye"
-        case .onBreak: "eye.fill"
-        case .paused: "pause.circle"
-        case .away: "moon.zzz"
+        case .counting: "eye"
+        case .reminding: "eye.fill"
+        case .paused, .suspended: "pause.circle"
         }
     }
 }

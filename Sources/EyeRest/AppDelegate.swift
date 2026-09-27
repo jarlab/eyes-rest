@@ -71,8 +71,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     /// An accessory app stays active with no windows after its last window (Settings or the About panel) closes,
-    /// which leaves the user without keyboard focus. Hiding EyeRest hands focus back to the previous app. The overlay
-    /// and heads-up panels are borderless and can't hide, so they neither count nor disappear.
+    /// which leaves the user without keyboard focus. Hiding EyeRest hands focus back to the previous app. The reminder
+    /// card's panel is borderless and can't hide, so it neither counts nor disappears.
     private static func hideIfNoTitledWindowIsOpen() {
         guard NSApp.isActive,
               !NSApp.windows.contains(where: { $0.isVisible && $0.styleMask.contains(.titled) })

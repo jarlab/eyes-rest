@@ -10,20 +10,10 @@ let package = Package(
     targets: [
         // Pure scheduling/settings logic. Foundation only, so it is unit-tested headlessly.
         .target(name: "EyeRestCore"),
-        // OS signals: idle time, sleep/lock notifications, camera/mic in-use, sounds.
-        .target(
-            name: "EyeRestSystem",
-            dependencies: ["EyeRestCore"],
-            linkerSettings: [
-                .linkedFramework("CoreAudio"),
-                .linkedFramework("CoreMediaIO"),
-                .linkedFramework("IOKit"),
-            ]
-        ),
-        // Windows and SwiftUI views: break overlay, heads-up, settings.
+        // Windows and SwiftUI views: the reminder card and Settings.
         .target(name: "EyeRestUI", dependencies: ["EyeRestCore"]),
         // The menu-bar app that wires everything together.
-        .executableTarget(name: "EyeRest", dependencies: ["EyeRestCore", "EyeRestSystem", "EyeRestUI"]),
+        .executableTarget(name: "EyeRest", dependencies: ["EyeRestCore", "EyeRestUI"]),
         .testTarget(name: "EyeRestCoreTests", dependencies: ["EyeRestCore"]),
     ]
 )

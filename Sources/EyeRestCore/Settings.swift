@@ -3,53 +3,35 @@ import Foundation
 /// User preferences. Every numeric field is kept inside its documented range: `clamped()` enforces it,
 /// and decoding clamps automatically.
 public struct EyeRestSettings: Codable, Equatable, Sendable {
-    /// Minutes of work between breaks (1...120).
-    public var workIntervalMinutes: Int = 20
-    /// Length of a break in seconds (10...300).
-    public var breakDurationSeconds: Int = 20
-    /// Snooze length in minutes (1...30). "Snooze" is the user-facing name for postponing.
-    public var postponeMinutes: Int = 5
-    /// Minutes without input after which the user counts as away (1...30).
-    public var idleThresholdMinutes: Int = 5
-    public var allowSkip: Bool = true
-    public var allowPostpone: Bool = true
-    /// Show the heads-up pill 10 seconds before a break.
-    public var showHeadsUp: Bool = true
-    /// Hold a due break while the camera or microphone is in use.
-    public var holdDuringCalls: Bool = true
-    public var pauseWhenIdle: Bool = true
-    /// Play a chime when a break completes.
-    public var playSounds: Bool = true
+    /// Minutes between reminders (1...120).
+    public var intervalMinutes: Int = 20
+    /// How long the reminder card stays up, in seconds (5...120).
+    public var reminderSeconds: Int = 20
+    /// Play a gentle sound when the reminder card appears.
+    public var playSound: Bool = true
+    /// Show the time until the next reminder next to the menu-bar icon.
     public var showCountdownInMenuBar: Bool = true
 
     public init() {}
 
     public static let `default` = EyeRestSettings()
 
-    public static let workIntervalRange: ClosedRange<Int> = 1...120
-    public static let breakDurationRange: ClosedRange<Int> = 10...300
-    public static let postponeRange: ClosedRange<Int> = 1...30
-    public static let idleThresholdRange: ClosedRange<Int> = 1...30
+    public static let intervalRange: ClosedRange<Int> = 1...120
+    public static let reminderRange: ClosedRange<Int> = 5...120
 
-    /// Break lengths offered in Settings, in seconds.
-    public static let breakDurationPresets: [Int] = [10, 20, 30, 45, 60, 120, 180, 300]
-    /// Snooze lengths offered in Settings, in minutes.
-    public static let postponePresets: [Int] = [1, 2, 5, 10, 15, 30]
-    /// "Away after" values offered in Settings, in minutes.
-    public static let idleThresholdPresets: [Int] = [2, 3, 5, 10, 15, 30]
+    /// Reminder lengths offered in Settings, in seconds.
+    public static let reminderPresets: [Int] = [10, 20, 30, 45, 60]
 
-    public var workInterval: TimeInterval { TimeInterval(workIntervalMinutes) * 60 }
-    public var breakDuration: TimeInterval { TimeInterval(breakDurationSeconds) }
-    public var postponeDuration: TimeInterval { TimeInterval(postponeMinutes) * 60 }
-    public var idleThreshold: TimeInterval { TimeInterval(idleThresholdMinutes) * 60 }
+    /// The time between reminders.
+    public var interval: TimeInterval { TimeInterval(intervalMinutes) * 60 }
+    /// How long a reminder card stays up.
+    public var reminderDuration: TimeInterval { TimeInterval(reminderSeconds) }
 
     /// A copy with every numeric field forced into its range.
     public func clamped() -> EyeRestSettings {
         var settings = self
-        settings.workIntervalMinutes = workIntervalMinutes.clamped(to: Self.workIntervalRange)
-        settings.breakDurationSeconds = breakDurationSeconds.clamped(to: Self.breakDurationRange)
-        settings.postponeMinutes = postponeMinutes.clamped(to: Self.postponeRange)
-        settings.idleThresholdMinutes = idleThresholdMinutes.clamped(to: Self.idleThresholdRange)
+        settings.intervalMinutes = intervalMinutes.clamped(to: Self.intervalRange)
+        settings.reminderSeconds = reminderSeconds.clamped(to: Self.reminderRange)
         return settings
     }
 
@@ -61,16 +43,9 @@ public struct EyeRestSettings: Codable, Equatable, Sendable {
             (try? container.decodeIfPresent(T.self, forKey: key)) ?? fallback
         }
         let defaults = Self.default
-        workIntervalMinutes = decode(.workIntervalMinutes, default: defaults.workIntervalMinutes)
-        breakDurationSeconds = decode(.breakDurationSeconds, default: defaults.breakDurationSeconds)
-        postponeMinutes = decode(.postponeMinutes, default: defaults.postponeMinutes)
-        idleThresholdMinutes = decode(.idleThresholdMinutes, default: defaults.idleThresholdMinutes)
-        allowSkip = decode(.allowSkip, default: defaults.allowSkip)
-        allowPostpone = decode(.allowPostpone, default: defaults.allowPostpone)
-        showHeadsUp = decode(.showHeadsUp, default: defaults.showHeadsUp)
-        holdDuringCalls = decode(.holdDuringCalls, default: defaults.holdDuringCalls)
-        pauseWhenIdle = decode(.pauseWhenIdle, default: defaults.pauseWhenIdle)
-        playSounds = decode(.playSounds, default: defaults.playSounds)
+        intervalMinutes = decode(.intervalMinutes, default: defaults.intervalMinutes)
+        reminderSeconds = decode(.reminderSeconds, default: defaults.reminderSeconds)
+        playSound = decode(.playSound, default: defaults.playSound)
         showCountdownInMenuBar = decode(.showCountdownInMenuBar, default: defaults.showCountdownInMenuBar)
         self = clamped()
     }
@@ -78,7 +53,7 @@ public struct EyeRestSettings: Codable, Equatable, Sendable {
 
 /// Persists `EyeRestSettings` as JSON in `UserDefaults`.
 public final class SettingsStore {
-    static let key = "settings.v1"
+    static let key = "settings.v2"
 
     private let defaults: UserDefaults
 

@@ -5,15 +5,9 @@ import ServiceManagement
 /// The "Open at login" setting. `SMAppService.mainApp` is the only source of truth; nothing is stored separately.
 @MainActor
 public final class LaunchAtLoginModel: ObservableObject {
-    public enum Availability: Equatable, Sendable {
-        case available
-        /// Running outside an app bundle (e.g. `swift run`).
-        case notBundled
-        /// A bundle outside /Applications or ~/Applications, where login items are unreliable.
-        case notInApplications
-    }
-
-    public let availability: Availability
+    /// False outside an app bundle (e.g. `swift run`) and for a bundle outside /Applications or ~/Applications, where
+    /// login items are unreliable.
+    public let isAvailable = AppEnvironment.isBundledApp && AppEnvironment.isInstalledInApplications
     /// On while registered, including while waiting for the user's approval.
     @Published public private(set) var isEnabled = false
     @Published public private(set) var requiresApproval = false
@@ -23,13 +17,6 @@ public final class LaunchAtLoginModel: ObservableObject {
     private var activationObserver: NSObjectProtocol?
 
     public init() {
-        if !AppEnvironment.isBundledApp {
-            availability = .notBundled
-        } else if !AppEnvironment.isInstalledInApplications {
-            availability = .notInApplications
-        } else {
-            availability = .available
-        }
         refresh()
         // The user may approve or remove the login item in System Settings while EyeRest runs.
         activationObserver = NotificationCenter.default.addObserver(
@@ -48,9 +35,9 @@ public final class LaunchAtLoginModel: ObservableObject {
         if requiresApproval != approval { requiresApproval = approval }
     }
 
-    /// Registers or unregisters EyeRest as a login item. Does nothing unless `availability` is `.available`.
+    /// Registers or unregisters EyeRest as a login item. Does nothing unless `isAvailable`.
     public func setEnabled(_ enabled: Bool) {
-        guard availability == .available, enabled != isEnabled else { return }
+        guard isAvailable, enabled != isEnabled else { return }
         do {
             if enabled {
                 try SMAppService.mainApp.register()
